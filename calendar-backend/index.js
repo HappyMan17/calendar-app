@@ -1,8 +1,8 @@
 import express from "express";
-import {env} from './config';
+import { envs } from './config/env.js';
 
 const app  = express();
-const PORT = env.PORT;
+const PORT = envs.PORT;
 
 // public directory
 app.use(express.static('public'));
