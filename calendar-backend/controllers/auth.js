@@ -1,28 +1,95 @@
 import { response } from "express";
 import { userMapper } from "../mappers/userMapper.js";
+import { userModel } from "../models/UserModel.js";
+import { comparePassword, hashPassword } from "../config/bcrypt.js";
 
-export const createUser = (req, res = response) => {
-  const user = userMapper(req.body);
-
-  res.json({
-    ok: true,
-    message: 'Register made',
-    user,
-  });
+const checkUserEmailAlreadyExist = async (email) => {
+  try {
+    const user = await userModel.findOne({ email });
+    return {
+      emailExist: user,
+      user,
+    };   
+  } catch (error) {
+    console.log('db connection error');
+    return {
+      emailExist: false,
+      user: null,
+    };
+  }
 };
 
-export const loginUser = (req, res = response) => {
-  const { data, error } = userMapper(req.body);
+export const createUser = async (req, res = response) => {
+  // const user = userMapper(req.body);
+  try {
+    const { emailExist } = await checkUserEmailAlreadyExist(req.body.email);
+    if (emailExist) {
+      return res.status(400).json({
+        ok: false,
+        message: 'User email already exists',
+      });
+    }
 
-  if (error) {
-    res.status(error.status).json({ error });
+    // db save user
+    const user = new userModel(userMapper(req.body));
+    // hashing password
+    user.password = hashPassword(user.password);
+
+    await user.save();
+  
+    res.status(201).json({
+      ok: true,
+      // message: 'Register made',
+      user: {
+        uid: user.id,
+        name: user.name,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      message: 'Please talk with your administrator',
+    });
   }
+};
 
-  res.json({
-    ok: true,
-    message: 'Register made',
-    user: data,
-  });
+export const loginUser = async (req, res = response) => {
+  try {
+    const { password, email } = userMapper(req.body);
+    const { emailExist, user } = await checkUserEmailAlreadyExist(email);
+
+    if (!emailExist) {
+      return res.status(400).json({
+        ok: false,
+        // message: 'User email does not exists',
+        message: 'User email or password does not exists',
+      });
+    }
+
+    // check password
+    const validPassword = comparePassword(password, user.password);
+
+    if (!validPassword) {
+      return res.status(400).json({
+        ok: false,
+        message: 'Invalid email or password'
+        // message: 'Invalid password'
+      });
+    }
+  
+    res.json({
+      ok: true,
+      user: {
+        uid: user.id,
+        name: user.name,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      message: 'Please talk with your administrator',
+    });
+  }
 };
 
 export const checkUserToken = (req, res = response) => {
