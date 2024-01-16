@@ -7,6 +7,7 @@ import express from "express";
 import { createUser, loginUser, checkUserToken } from "../controllers/auth.js";
 import { check } from "express-validator";
 import { validateFields } from "../middlewares/fieldsValidator.js";
+import { JWTValidation } from "../middlewares/jwtValidation.js";
 
 const authRouter = express.Router();
 
@@ -32,6 +33,6 @@ authRouter.post('/login',
   loginUser);
 
 // renew user token
-authRouter.get('/verify', checkUserToken);
+authRouter.get('/verify', JWTValidation, checkUserToken);
 
 export default authRouter;

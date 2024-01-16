@@ -2,6 +2,7 @@ import { response } from "express";
 import { userMapper } from "../mappers/userMapper.js";
 import { userModel } from "../models/UserModel.js";
 import { comparePassword, hashPassword } from "../config/bcrypt.js";
+import { generateJWT } from "../helpers/jwt.js";
 
 const checkUserEmailAlreadyExist = async (email) => {
   try {
@@ -36,6 +37,9 @@ export const createUser = async (req, res = response) => {
     user.password = hashPassword(user.password);
 
     await user.save();
+
+    // token
+    const token = await generateJWT(user.id, user.name);
   
     res.status(201).json({
       ok: true,
@@ -43,6 +47,7 @@ export const createUser = async (req, res = response) => {
       user: {
         uid: user.id,
         name: user.name,
+        token,
       },
     });
   } catch (error) {
@@ -76,12 +81,16 @@ export const loginUser = async (req, res = response) => {
         // message: 'Invalid password'
       });
     }
+
+    // token
+    const token = await generateJWT(user.id, user.name);
   
     res.json({
       ok: true,
       user: {
         uid: user.id,
         name: user.name,
+        token,
       },
     });
   } catch (error) {
@@ -92,9 +101,13 @@ export const loginUser = async (req, res = response) => {
   }
 };
 
-export const checkUserToken = (req, res = response) => {
+export const checkUserToken = async (req, res = response) => {
+  const { uid, name } = req;
+
+  const token = await generateJWT(uid, name);
+
   res.json({
     ok: true,
-    message: 'Ok',
+    token,
   });
 };
