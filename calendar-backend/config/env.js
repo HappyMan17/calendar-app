@@ -3,5 +3,5 @@ import pkg from 'env-var';
 const { get } = pkg;
 
 export const envs = {
-  HOST: get('PORT').required().asInt(),
+  PORT: get('PORT').required().asInt(),
 };
