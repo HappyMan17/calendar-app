@@ -1,9 +1,14 @@
 import express from "express";
 import { envs } from './config/env.js';
 import authRouter from './routes/auth.js';
+import { dbConection } from "./database/config.js";
 
 const app  = express();
 const PORT = envs.PORT;
+
+// db connection
+dbConection();
+
 /**
  * middlewares
  */
