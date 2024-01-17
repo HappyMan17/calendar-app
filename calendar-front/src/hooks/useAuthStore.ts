@@ -17,7 +17,7 @@ export const useAuthStore = () => {
       // console.log({ data });
       localStorage.setItem('token', data.token);
       localStorage.setItem('token-init-date', `${new Date().getTime()}`);
-      dispatch(onLogin({ name: data.name, email: data.email }));
+      dispatch(onLogin({ name: data.user.name, email: data.user.email }));
 
     } catch (error) {
       console.log({ error });
@@ -28,6 +28,26 @@ export const useAuthStore = () => {
     }
   };
 
+  const checkAuthToken = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return dispatch(onLogout(null));
+
+    try {
+      const { data } = await calendarApi.get('verify');
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('token-init-date', `${new Date().getTime()}`);
+      dispatch(onLogin({ name: data.name, email: data.user.email }));
+    } catch (error) {
+      localStorage.clearItem('token', 'token-init-date');
+      dispatch(onLogout(null));
+    }
+  };
+
+  const startLogout = () => {
+    localStorage.clear();
+    dispatch(onLogout(null));
+  };
+
   return {
     //? properties
     errorMessage,
@@ -35,5 +55,7 @@ export const useAuthStore = () => {
     user,
     //? methods
     startLogin,
+    startLogout,
+    checkAuthToken,
   };
 };

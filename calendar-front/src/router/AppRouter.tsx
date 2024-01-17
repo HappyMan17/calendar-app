@@ -1,19 +1,40 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { LoginPage } from "../auth";
 import { CalendarPage } from "../calendar";
-
-type Auth = 'authenticated' | 'not-authenticated';
+import { useAuthStore } from "../hooks";
+import { useEffect } from "react";
 
 export const AppRouter = () => {
-  const authStatus: Auth = 'not-authenticated';
+  const { status, checkAuthToken } = useAuthStore();
+  // const authStatus: Auth = 'not-authenticated';
   // const authStatus: Auth = 'authenticated';
+  useEffect(() => {
+    checkAuthToken();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (status === 'checking') {
+    return (
+      <h3> Cargando... </h3>
+    );
+  }
 
   return (
     <Routes>
       {
-        (authStatus === 'not-authenticated')
-         ? (<Route path="/auth/*" element={<LoginPage />} />)
-         : (<Route path="/*" element={<CalendarPage />} />)
+        (status === 'not-authenticated')
+         ? (
+            <>
+              <Route path="/auth/*" element={<LoginPage />} />
+              <Route path="/*" element={ <Navigate to="/auth/login" />} />
+            </>
+          )
+         : (
+            <>
+              <Route path="/" element={<CalendarPage />} />
+              <Route path="/*" element={ <Navigate to="/" />} />
+            </>
+          )
       }
 
       {/* Other routes */}
