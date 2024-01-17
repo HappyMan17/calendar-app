@@ -90,8 +90,8 @@ export const loginUser = async (req, res = response) => {
       user: {
         uid: user.id,
         name: user.name,
-        token,
       },
+      token,
     });
   } catch (error) {
     res.status(500).json({
@@ -108,6 +108,10 @@ export const checkUserToken = async (req, res = response) => {
 
   res.json({
     ok: true,
+    user: {
+      uid,
+      name,
+    },
     token,
   });
 };
