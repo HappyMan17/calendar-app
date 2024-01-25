@@ -1,6 +1,7 @@
 import express from "express";
 import { envs } from './config/env.js';
 import authRouter from './routes/auth.js';
+import { router as eventRouter } from './routes/events.js';
 import cors from 'cors';
 import { dbConection } from "./database/config.js";
 import constants from "./config/constants.js";
@@ -33,6 +34,7 @@ app.use(cors({
 
 // Rutes
 app.use('/api/auth', authRouter);
+app.use('/api/events', eventRouter);
 
 app.listen(PORT, () => {
   console.log('Server running on port ' + PORT);
