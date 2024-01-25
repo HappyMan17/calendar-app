@@ -1,9 +1,11 @@
 import { useAppDispatch, useAppSelector } from ".";
-import { CalendarEvents } from "../helpers";
-import { onAddNewEvent, onDeleteEvent, onSetActiveEvent, onUpdateEvent } from "../store";
+import { calendarApi } from "../api";
+import { CalendarEvents, convertToDate } from "../helpers";
+import { onAddNewEvent, onDeleteEvent, onLoadEvents, onSetActiveEvent, onUpdateEvent } from "../store";
 
 export const useCalendar = () => {
   const { events, activeEvent } = useAppSelector(state => state.calendar);
+  const { user } = useAppSelector(state => state.auth);
   const dispatch = useAppDispatch();
 
   const setActiveEvent = (calendarEvent: CalendarEvents) => {
@@ -13,20 +15,44 @@ export const useCalendar = () => {
   //* Thunk alternative
   const startSavingEvent = async(calendarEvent: CalendarEvents) => {
     // todo: save the event in the backend
+    try {
+      if (calendarEvent.id) {
+        await calendarApi.put(`/events/${calendarEvent.id}`, calendarEvent);
+        // update/
+        dispatch(onUpdateEvent({ ...calendarEvent, user }));
+      } else {
+        // create
+        const { data } = await calendarApi.post('/events', calendarEvent);
 
-    if (calendarEvent._id) {
-      // update
-      dispatch(onUpdateEvent({ ...calendarEvent }));
-    } else {
-      // create
-      //* this id is temporary, backend will create it
-      dispatch(onAddNewEvent({ ...calendarEvent, _id: new Date().getTime() }));
+        dispatch(onAddNewEvent({ ...calendarEvent, id: data.event.id, user }));
+      }
+    } catch (error) {
+      console.log('Error updating events');
     }
   };
 
   const startDeleteEvent = async () => {
-    //* Delete event in backend
-    dispatch(onDeleteEvent());
+    try {
+      await calendarApi.delete(`/events/${activeEvent?.id}`);
+      console.log('event Removed');
+      dispatch(onDeleteEvent());
+
+    } catch (error) {
+      //* Delete event in backend
+      console.log('Error removing event');
+    }
+  };
+
+  const startLoadingEvent = async () => {
+    try {
+      const { data } = await calendarApi.get('/event');
+      const events = convertToDate(data.events);
+
+      dispatch(onLoadEvents(events));
+
+    } catch (error) {
+      console.log('Error loading events');
+    }
   };
 
   return {
@@ -34,9 +60,11 @@ export const useCalendar = () => {
     events,
     activeEvent,
     hasEventSelected: !!activeEvent,
+
     //* Methods
     setActiveEvent,
     startSavingEvent,
     deleteEvent: startDeleteEvent,
+    startLoadingEvent,
   };
 };
