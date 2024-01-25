@@ -1,4 +1,4 @@
-import EventModel from '../models/EventModel';
+import EventModel from '../models/EventModel.js';
 
 export const getEvents = (req, res) => {
   try {

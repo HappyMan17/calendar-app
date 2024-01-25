@@ -1,15 +1,20 @@
+/**
+ * Route: /api/events/
+ */
+
 import express from 'express';
-import { JWTValidation, fieldsValidation } from '../middlewares/jwtValidation';
+import { JWTValidation } from '../middlewares/jwtValidation.js';
+import { validateFields } from '../middlewares/fieldsValidator.js';
 import { check } from 'express-validator';
 import {
   getEvents,
   createEvent,
   updateEvent,
   deleteEvent,
-} from '../controllers/events';
-import { isDate } from '../helpers/isDate';
+} from '../controllers/events.js';
+import { isDate } from '../helpers/isDate.js';
 
-const router = express.Router();
+export const router = express.Router();
 
 router.get('/', JWTValidation, getEvents);
 router.post('/',[
@@ -17,15 +22,13 @@ router.post('/',[
     check('start', 'Start date is required').custom(isDate),
     check('end', 'End date is required').custom(isDate),
     JWTValidation,
-    fieldsValidation,
+    validateFields,
 ], createEvent);
 router.put('/:id', [
   check('title', 'Title is required').not().isEmpty(),
   check('start', 'Start date is required').custom(isDate),
   check('end', 'End date is required').custom(isDate),
   JWTValidation,
-  fieldsValidation,
+  validateFields,
 ], updateEvent);
 router.delete('/:id', JWTValidation, deleteEvent);
-
-export default router;
